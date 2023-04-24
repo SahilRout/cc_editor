@@ -113,7 +113,7 @@ const EditorPage = () => {
                     </div>
                 </div>
                 <a target="_blank" href="https://chat-gpt-chatbot.vercel.app/"><button className="btn gptBtn"  >
-                    Dumfuq! Use ChatGPT
+                    Use ChatGPT
                 </button></a>
                 <button className="btn copyBtn" onClick={copyRoomId}>
                     Copy ROOM ID
