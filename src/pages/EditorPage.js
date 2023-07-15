@@ -21,30 +21,35 @@ const EditorPage = () => {
 
     useEffect(() => {
         const init = async () => {
-            socketRef.current = await initSocket();
-            socketRef.current.on('connect_error', (err) => handleErrors(err));
+            socketRef.current = await initSocket();// intializes the socket 
+            socketRef.current.on('connect_error', (err) => handleErrors(err));// looks for if there is a error event 
             socketRef.current.on('connect_failed', (err) => handleErrors(err));
-
+            // function to send toast for the error event
             function handleErrors(e) {
                 // console.log('socket error', e);
                 toast.error('Socket connection failed, try again later.');
                 reactNavigator('/');
             }
-
+            // Sending the server that we have joind and sedning the roomId and the user name with it 
             socketRef.current.emit(ACTIONS.JOIN, {
                 roomId,
                 username: location.state?.username,
             });
 
-            // Listening for joined event
+            // Listening for joined event om is for join
             socketRef.current.on(
                 ACTIONS.JOINED,
+                // we get a call back where we get the data we sent 
                 ({ clients, username, socketId }) => {
+                    // except the currnet user name notify rest of them 
                     if (username !== location.state?.username) {
                         toast.success(`${username} joined the room.`);
                         // console.log(`${username} joined`);
                     }
+                    // update the clients list 
                     setClients(clients);
+                    // as soon as the new user joins we send the updated code to the server so that it can give to the new client as we want the new client to get that as soon as it joins
+                    // we also sending the socket id of the new user 
                     socketRef.current.emit(ACTIONS.SYNC_CODE, {
                         code: codeRef.current,
                         socketId,
@@ -52,11 +57,14 @@ const EditorPage = () => {
                 }
             );
 
-            // Listening for disconnected
+            // Listening for disconnected event sent from the server 
             socketRef.current.on(
                 ACTIONS.DISCONNECTED,
+                // got this as a call back from the server 
                 ({ socketId, username }) => {
+                    // using the user name we can display this 
                     toast.success(`${username} left the room.`);
+                    // we use filter to update all the clients and set the clients so that the ui gets updated
                     setClients((prev) => {
                         return prev.filter(
                             (client) => client.socketId !== socketId
@@ -67,7 +75,9 @@ const EditorPage = () => {
         };
         init();
         return () => {
+            // on are all the listners so we clear all the listners so that there is no memory leak when the component is unmount
             socketRef.current.disconnect();
+            // unscbcribing the events
             socketRef.current.off(ACTIONS.JOINED);
             socketRef.current.off(ACTIONS.DISCONNECTED);
         };
